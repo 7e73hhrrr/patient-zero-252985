@@ -17,8 +17,32 @@ public class Outbreak {
      * Main calls this twice: with all costs equal to 1 (the line "Tests needed") and with the real costs ("Cheapest testing").
      */
     public static boolean[] cheapestTests(int n, int[][] nb, int[] cost) {
-        // TODO Mission 5a
-        return new boolean[n];
+        boolean[] tested = new boolean[n];
+        if (n == 0) return tested;
+        long[] take = new long[n];
+        long[] skip = new long[n];
+        computeCosts(0, -1, nb, cost, take, skip);
+        rebuild(0, -1, true, nb, take, skip, tested);
+        return tested;
+    }
+
+    private static void computeCosts(int v, int parent, int[][] nb, int[] cost,
+                                     long[] take, long[] skip) {
+        take[v] = cost[v];
+        for (int child : nb[v]) {
+            if (child == parent) continue;
+            computeCosts(child, v, nb, cost, take, skip);
+            take[v] += Math.min(take[child], skip[child]);
+            skip[v] += take[child];
+        }
+    }
+
+    private static void rebuild(int v, int parent, boolean parentCovered, int[][] nb,
+                                long[] take, long[] skip, boolean[] tested) {
+        tested[v] = !parentCovered || take[v] < skip[v];
+        for (int child : nb[v]) {
+            if (child != parent) rebuild(child, v, tested[v], nb, take, skip, tested);
+        }
     }
 
     /**
@@ -27,7 +51,25 @@ public class Outbreak {
      * Example: a line 0-1-2-3 has chain 3; a star with centre 0 and leaves 1, 2, 3 has chain 2.
      */
     public static int longestChain(int n, int[][] nb) {
-        // TODO Mission 5b
-        return -1;
+        int[] diameter = {0};
+        if (n > 0) height(0, -1, nb, diameter);
+        return diameter[0];
+    }
+
+    private static int height(int v, int parent, int[][] nb, int[] diameter) {
+        int longest = 0;
+        int second = 0;
+        for (int child : nb[v]) {
+            if (child == parent) continue;
+            int branch = 1 + height(child, v, nb, diameter);
+            if (branch > longest) {
+                second = longest;
+                longest = branch;
+            } else if (branch > second) {
+                second = branch;
+            }
+        }
+        diameter[0] = Math.max(diameter[0], longest + second);
+        return longest;
     }
 }
