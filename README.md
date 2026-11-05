@@ -1,75 +1,75 @@
-# Assignment 4. Patient Zero
+# Patient Zero — Assignment 4
 
-Student ID:
-Name:
-Group:
+**Student ID** 252985 · **Name** Farida Byerik · **Group** SE-2532
 
-This file is the report. Fill it in as you go. How to start: `START_HERE.md`. The task: `docs/Assignment4.pdf`.
+## Run in IntelliJ or the terminal
+
+Open the extracted `patient-zero` folder, which contains `src`, `tools` and `data`. Select JDK 17 or newer. In IntelliJ, mark `src` as Sources Root and run `Main` with the project folder as the working directory.
+
+```bash
+java tools/MakeVariant.java 252985 data
+java tools/Check.java
+javac -encoding UTF-8 -d out src/*.java
+java -cp out Main
+java -cp out Bench
+```
+
+The four personal input files are included. The generator command recreates them. Run Main after Check to refresh the console with the personal data because Check runs Main on the examples.
 
 ## Program output
 
-The 9 lines your program prints on your data (`java -cp out Main`):
+```text
+Mutations: 72
+Shared core: 1106
+Marker hits: 5
+First hit: 2599
+Border length: 4
+Shared words: 489
+Tests needed: 26
+Cheapest testing: 127
+Longest chain: 19
+```
 
-    Mutations:
-    Shared core:
-    Marker hits:
-    First hit:
-    Border length:
-    Shared words:
-    Tests needed:
-    Cheapest testing:
-    Longest chain:
+[Open the interactive lab console](output/outbreak.html) locally after extracting the project.
 
-My outbreak report (a screenshot of `output/outbreak.html`):
+![Personal lab console showing all five missions passing](output/outbreak.png)
 
-![outbreak](output/outbreak.png)
+## Mission explanations
 
-## Questions
+**1. Mutations.** Cell `d[i][j]` stores the fewest changes needed to turn the first `i` letters of A into the first `j` letters of B. The top cell plus one deletes a letter, the left cell plus one inserts a letter, and the diagonal cell adds zero for a match or one for a replacement. Take the smallest of these three costs. The first row and column count the insertions or deletions needed when one prefix is empty.
 
-Answer in your own words, two or three sentences each.
+**2. Shared core.** A substring uses consecutive letters. A subsequence can skip letters while preserving their order. In this variant only 369 letters match at the same index, but the LCS has length 1106 because it can align letters again after an insertion or deletion shifts their positions.
 
-Mission 1. What does the cell d[i][j] of your table mean, and how is it computed from other cells?
+**3. Marker.** Each prefix-function entry gives the length of the longest proper prefix that also ends at that position. After a mismatch, KMP reuses the next shorter matching border and tries the current text letter again, so it never has to rewind the text pointer. The personal marker `GCGGTAGGCGG` begins and ends with `GCGG`, giving border length 4. After a full hit those four letters can start another hit.
 
-Mission 2. How is the longest common subsequence different from the longest common substring? My Shared core is bigger than the number of letters that are the same at the same place: why?
+**4. Copied words.** A hash can assign the same number to different words, so the program checks the actual letters at candidate positions in B. Once one occurrence is verified, that position in A contributes exactly one, even if B contains more copies. If many unequal windows collide, each A window may require comparisons against many B windows.
 
-Mission 3. What does the prefix function tell you, and why does the pointer in the text never go back in KMP? What is the Border length of my marker and what does it mean?
+**5. Whom to test.** If person v is tested, pay their cost and take the cheaper state for each child. If v is skipped, each child must be tested to cover its link to v. The cheaper root state gives the total, and a second walk chooses the people under the same rules. A high-degree-first rule can fail even on a star: if its center costs 10 and its three leaves cost 1 each, testing all leaves covers every link for 3. For the longest chain, the two deepest branches below a person form the longest path whose highest point is that person.
 
-Mission 4. Why must you compare the letters after the hashes are equal? What happens to the cost of Rabin-Karp if many windows have the same hash?
+## Timing
 
-Mission 5. What are the two states of a person in your DP, and how do you get the answer for a person from its children? Why does a greedy "test the person with most links first" not always give the cheapest answer?
+Measured with the supplied Bench class, in milliseconds, averaged over three runs.
 
-## AI use
-
-The syllabus requires you to say which AI tools you used and for what. Write the tool (ChatGPT, Copilot, other) and what you asked it: explain an idea, find an error, review code. Write "none" if you did not use any. If you took code or text from a book or a website, give the source here.
-
-## Timing (Mission 7)
-
-Milliseconds, average of 3 runs, from `java -cp out Bench`.
-
-| test | size | time |
+| Method | Input sizes | Times (ms), in the same order |
 |---|---|---|
-| naive search | 20 000 / 40 000 / 80 000 | |
-| KMP | 20 000 / 40 000 / 80 000 | |
-| edit distance | 500 / 1000 / 2000 / 4000 | |
+| Naive search | 20,000 / 40,000 / 80,000 | 13.1 / 21.4 / 36.8 |
+| KMP | 20,000 / 40,000 / 80,000 | 4.1 / 2.2 / 1.5 |
+| Edit distance | 500 / 1,000 / 2,000 / 4,000 | 8.8 / 8.8 / 13.9 / 39.4 |
 
-What do the numbers say about how the time grows? When you double the size, by how much does each time grow? Two or three sentences.
+Naive time rose by about 1.6× and 1.7× when the text doubled. KMP took less time on the later, larger inputs in this run; short measurements and JVM warm-up can mask its linear growth. Doubling both strains creates about four times as many DP cells, though the largest measured edit-distance time rose by about 2.8×.
 
 ## Complexity
 
-n is the length of the text (or of a strain), m the length of the pattern, k the length of the window, v the number of people. Fill in every algorithm you wrote.
-
-| algorithm | time | space | assumptions |
+| Algorithm | Time | Extra space | Meaning and assumptions |
 |---|---|---|---|
-| Edit distance | | | |
-| LCS | | | |
-| Prefix function and KMP | | | |
-| Rabin-Karp (shared words) | | | |
-| Tree DP | | | |
+| Edit distance | O((a+1)(b+1)) | O((a+1)(b+1)) | Full table for strains of lengths a and b |
+| LCS | O((a+1)(b+1)) | O((a+1)(b+1)) | One cell per prefix pair |
+| Prefix function | O(m) | O(m) | Marker length m |
+| KMP including prefix function | O(n+m) | O(m+h) | Genome length n, h reported hits |
+| Rabin–Karp | O(a+b+Ck) | O(b) | Expected constant-time hash-map access; C candidate pairs examined, up to (a−k+1)(b−k+1) when both lengths are at least k |
+| Minimum cover and reconstruction | O(v) | O(v) | v people, v−1 links, two traversals |
+| Longest chain | O(v) | O(t) | One traversal with recursion depth t, the rooted tree height in vertices |
 
-## Before you submit
+## AI use
 
-- The four files in `data` and the screenshot `output/outbreak.png` are in the repository.
-- `java tools/Check.java` shows all examples right.
-- This README is filled in, the program output and the section AI use included.
-- The work is pushed to main (at least one commit per mission) and the repository is public.
-- The link is attached in Moodle.
+ChatGPT generated the Java mission implementations and drafted this report. It used the supplied Java generator for ID 252985, ran the three official examples, ran Main on the personal data and measured Bench. The input generator, checker, benchmark and lab console came from the course starter. The assignment requires students to understand every submitted line and write their own README answers. Review, adapt and explain this reference before submission.
