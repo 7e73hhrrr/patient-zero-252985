@@ -1,22 +1,45 @@
 # Patient Zero — Assignment 4
 
-**Student ID** 252985 · **Name** Farida Byerik · **Group** SE-2532
+**Student:** Farida Byerik  
+**Student ID:** 252985  
+**Group:** SE-2532
 
-## Run in IntelliJ or the terminal
+## About the Project
 
-Open the extracted `patient-zero` folder, which contains `src`, `tools` and `data`. Select JDK 17 or newer. In IntelliJ, mark `src` as Sources Root and run `Main` with the project folder as the working directory.
+Patient Zero is a Java project that uses different algorithms to analyze DNA sequences and infection connections.
+
+The assignment includes five missions covering dynamic programming, string matching, hashing, and tree algorithms.
+
+## How to Run
+
+The project uses Java 17 or newer.
+
+To run it in IntelliJ IDEA, open the `patient-zero` folder, mark `src` as Sources Root, and run `Main.java`. Make sure the working directory is set to the project folder.
+
+You can also use the terminal:
 
 ```bash
+# Generate personal input data
 java tools/MakeVariant.java 252985 data
+
+# Run the checker
 java tools/Check.java
+
+# Compile the program
 javac -encoding UTF-8 -d out src/*.java
+
+# Run the program
 java -cp out Main
+
+# Run the benchmark
 java -cp out Bench
 ```
 
-The four personal input files are included. The generator command recreates them. Run Main after Check to refresh the console with the personal data because Check runs Main on the examples.
+The personal input files are already included in the `data` folder.
 
-## Program output
+## My Results
+
+After running the program with my personal data, I got these results:
 
 ```text
 Mutations: 72
@@ -30,46 +53,129 @@ Cheapest testing: 127
 Longest chain: 19
 ```
 
-[Open the interactive lab console](output/outbreak.html) locally after extracting the project.
+The visual results can also be viewed by opening `output/outbreak.html` in a browser.
 
-![Personal lab console showing all five missions passing](output/outbreak.png)
+![Program results](output/outbreak.png)
 
-## Mission explanations
+## Mission Explanations
 
-**1. Mutations.** Cell `d[i][j]` stores the fewest changes needed to turn the first `i` letters of A into the first `j` letters of B. The top cell plus one deletes a letter, the left cell plus one inserts a letter, and the diagonal cell adds zero for a match or one for a replacement. Take the smallest of these three costs. The first row and column count the insertions or deletions needed when one prefix is empty.
+### Mission 1 — Mutations
 
-**2. Shared core.** A substring uses consecutive letters. A subsequence can skip letters while preserving their order. In this variant only 369 letters match at the same index, but the LCS has length 1106 because it can align letters again after an insertion or deletion shifts their positions.
+This mission finds the minimum number of changes needed to turn one DNA sequence into another.
 
-**3. Marker.** Each prefix-function entry gives the length of the longest proper prefix that also ends at that position. After a mismatch, KMP reuses the next shorter matching border and tries the current text letter again, so it never has to rewind the text pointer. The personal marker `GCGGTAGGCGG` begins and ends with `GCGG`, giving border length 4. After a full hit those four letters can start another hit.
+I used the edit distance algorithm with dynamic programming.
 
-**4. Copied words.** A hash can assign the same number to different words, so the program checks the actual letters at candidate positions in B. Once one occurrence is verified, that position in A contributes exactly one, even if B contains more copies. If many unequal windows collide, each A window may require comparisons against many B windows.
+There are three possible operations: insertion, deletion, and replacement. If two letters are already the same, no change is needed.
 
-**5. Whom to test.** If person v is tested, pay their cost and take the cheaper state for each child. If v is skipped, each child must be tested to cover its link to v. The cheaper root state gives the total, and a second walk chooses the people under the same rules. A high-degree-first rule can fail even on a star: if its center costs 10 and its three leaves cost 1 each, testing all leaves covers every link for 3. For the longest chain, the two deepest branches below a person form the longest path whose highest point is that person.
+The algorithm compares the possible operations and chooses the one with the lowest cost.
 
-## Timing
+**My result:** 72 mutations.
 
-Measured with the supplied Bench class, in milliseconds, averaged over three runs.
+### Mission 2 — Shared Core
 
-| Method | Input sizes | Times (ms), in the same order |
+This mission finds the longest common subsequence (LCS) between two DNA sequences.
+
+A subsequence does not need to contain consecutive letters. It can skip some letters, but their order must stay the same.
+
+The algorithm uses dynamic programming to find the maximum number of matching letters in the correct order.
+
+**My result:** 1106.
+
+### Mission 3 — Marker Search
+
+This mission searches for a specific DNA marker inside a longer sequence.
+
+The algorithm used here is KMP (Knuth–Morris–Pratt).
+
+KMP uses a prefix function to avoid checking the same letters again after a mismatch. This makes searching more efficient.
+
+My marker is `GCGGTAGGCGG`.
+
+Its longest matching prefix and suffix is `GCGG`, which has a length of 4.
+
+**My results:**
+- Marker hits: 5
+- First hit: 2599
+- Border length: 4
+
+### Mission 4 — Copied Words
+
+This mission looks for DNA words that appear in both sequences.
+
+The program uses Rabin–Karp with rolling hashing to compare parts of the sequences.
+
+Hashing makes it faster to find possible matches. However, different words can sometimes have the same hash value, so the program also compares the actual letters to confirm a match.
+
+Each matching position in the first sequence is counted once.
+
+**My result:** 489 shared words.
+
+### Mission 5 — Whom to Test
+
+This mission works with a tree representing connections between people.
+
+The goal is to choose people for testing so that every connection has at least one tested person, while keeping the total testing cost as low as possible.
+
+Dynamic programming on trees is used to compare two choices for each person: testing them or not testing them.
+
+If a person is not tested, their connected children must be tested to cover those links.
+
+The mission also finds the longest chain of connected people by checking the longest paths in the tree.
+
+**My results:**
+- People needed for testing: 26
+- Minimum testing cost: 127
+- Longest chain: 19
+
+## Benchmark Results
+
+I measured the running times using the provided `Bench` class. The results are in milliseconds and averaged over three runs.
+
+| Algorithm | Input Size | Time (ms) |
+|---|---:|---:|
+| Naive Search | 20,000 | 13.1 |
+| Naive Search | 40,000 | 21.4 |
+| Naive Search | 80,000 | 36.8 |
+| KMP | 20,000 | 4.1 |
+| KMP | 40,000 | 2.2 |
+| KMP | 80,000 | 1.5 |
+| Edit Distance | 500 | 8.8 |
+| Edit Distance | 1,000 | 8.8 |
+| Edit Distance | 2,000 | 13.9 |
+| Edit Distance | 4,000 | 39.4 |
+
+### What I Noticed
+
+Naive search generally took longer when the input size increased.
+
+KMP was faster in these measurements. Its running time did not increase consistently because the measurements were short, and JVM warm-up can affect the results.
+
+Edit distance became noticeably slower for larger inputs because it needs to calculate more cells in its dynamic programming table.
+
+## Time and Space Complexity
+
+| Algorithm | Time Complexity | Space Complexity |
 |---|---|---|
-| Naive search | 20,000 / 40,000 / 80,000 | 13.1 / 21.4 / 36.8 |
-| KMP | 20,000 / 40,000 / 80,000 | 4.1 / 2.2 / 1.5 |
-| Edit distance | 500 / 1,000 / 2,000 / 4,000 | 8.8 / 8.8 / 13.9 / 39.4 |
+| Edit Distance | O(a × b) | O(a × b) |
+| LCS | O(a × b) | O(a × b) |
+| Prefix Function | O(m) | O(m) |
+| KMP | O(n + m) | O(m + h) |
+| Rabin–Karp | O(a + b + Ck) | O(b) |
+| Minimum Testing Cost | O(v) | O(v) |
+| Longest Chain | O(v) | O(t) |
 
-Naive time rose by about 1.6× and 1.7× when the text doubled. KMP took less time on the later, larger inputs in this run; short measurements and JVM warm-up can mask its linear growth. Doubling both strains creates about four times as many DP cells, though the largest measured edit-distance time rose by about 2.8×.
+Here, `a` and `b` are sequence lengths, `n` is the text length, `m` is the marker length, `h` is the number of matches, `k` is the word length, `C` is the number of candidate comparisons, `v` is the number of people, and `t` is the tree height.
 
-## Complexity
+For Rabin–Karp, the complexity assumes expected constant-time hash-map operations.
 
-| Algorithm | Time | Extra space | Meaning and assumptions |
-|---|---|---|---|
-| Edit distance | O((a+1)(b+1)) | O((a+1)(b+1)) | Full table for strains of lengths a and b |
-| LCS | O((a+1)(b+1)) | O((a+1)(b+1)) | One cell per prefix pair |
-| Prefix function | O(m) | O(m) | Marker length m |
-| KMP including prefix function | O(n+m) | O(m+h) | Genome length n, h reported hits |
-| Rabin–Karp | O(a+b+Ck) | O(b) | Expected constant-time hash-map access; C candidate pairs examined, up to (a−k+1)(b−k+1) when both lengths are at least k |
-| Minimum cover and reconstruction | O(v) | O(v) | v people, v−1 links, two traversals |
-| Longest chain | O(v) | O(t) | One traversal with recursion depth t, the rooted tree height in vertices |
+## Conclusion
 
-## AI use
+In this assignment, I worked with several algorithms for comparing DNA sequences, finding patterns, and analyzing connections between people.
 
-I used ChatGPT occasionally to clarify some concepts, understand errors, and get suggestions while working on the assignment.
+Dynamic programming was useful for edit distance, LCS, and finding the minimum testing cost. KMP and Rabin–Karp were used for string searching, while tree traversal helped find the longest infection chain.
+
+The program produced results for my personal input data, and the benchmark helped compare the running times of different algorithms.
+
+## AI Use
+
+I used ChatGPT for explanations, debugging help, and assistance with the code and report.
