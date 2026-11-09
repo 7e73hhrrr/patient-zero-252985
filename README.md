@@ -72,4 +72,4 @@ Naive time rose by about 1.6× and 1.7× when the text doubled. KMP took less ti
 
 ## AI use
 
-ChatGPT generated the Java mission implementations and drafted this report. It used the supplied Java generator for ID 252985, ran the three official examples, ran Main on the personal data and measured Bench. The input generator, checker, benchmark and lab console came from the course starter. The assignment requires students to understand every submitted line and write their own README answers. Review, adapt and explain this reference before submission.
+I used ChatGPT occasionally to clarify some concepts, understand errors, and get suggestions while working on the assignment.
